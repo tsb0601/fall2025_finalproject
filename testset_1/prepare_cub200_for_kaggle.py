@@ -140,50 +140,6 @@ def create_splits(cub_dir, output_dir, train_ratio=0.7, val_ratio=0.15, test_rat
     return train_df, val_df, test_df
 
 
-def create_kaggle_solution(test_df, output_dir, public_ratio=0.5, seed=42):
-    """
-    Create solution.csv for Kaggle with Public/Private splits
-    
-    Args:
-        test_df: Test dataframe with ground truth labels
-        output_dir: Output directory
-        public_ratio: Ratio of test set to use for public leaderboard
-        seed: Random seed
-    """
-    output_dir = Path(output_dir)
-    
-    # Shuffle test data
-    test_df = test_df.sample(frac=1, random_state=seed).reset_index(drop=True)
-    
-    # Split into public/private
-    n_public = int(len(test_df) * public_ratio)
-    
-    solution_data = []
-    for idx, row in test_df.iterrows():
-        usage = "Public" if idx < n_public else "Private"
-        solution_data.append({
-            'id': row['filename'],
-            'class_id': int(row['class_id']),
-            'Usage': usage
-        })
-    
-    solution_df = pd.DataFrame(solution_data)
-    
-    # Save solution file
-    solution_path = output_dir / 'solution.csv'
-    solution_df.to_csv(solution_path, index=False)
-    
-    print(f"\n{'='*60}")
-    print(f"Kaggle Solution File Created: {solution_path}")
-    print(f"{'='*60}")
-    print(f"Total test samples: {len(solution_df)}")
-    print(f"Public leaderboard: {(solution_df['Usage'] == 'Public').sum()} samples")
-    print(f"Private leaderboard: {(solution_df['Usage'] == 'Private').sum()} samples")
-    print(f"\nSample:")
-    print(solution_df.head(10))
-    
-    return solution_df
-
 
 def create_sample_submission(test_df, output_dir):
     """Create sample_submission.csv for students"""
@@ -339,30 +295,18 @@ def main():
     # Step 2: Create splits
     train_df, val_df, test_df = create_splits(cub_dir, args.output_dir, seed=args.seed)
     
-    # Step 3: Create Kaggle solution file
-    solution_df = create_kaggle_solution(test_df, args.output_dir, seed=args.seed)
-    
-    # Step 4: Create sample submission
+    # Step 3: Create sample submission (solution.csv removed - for TAs only!)
     sample_submission = create_sample_submission(test_df, args.output_dir)
     
-    # Step 5: Create README
+    # Step 4: Create README
     create_readme(args.output_dir)
     
     print("\n" + "="*60)
     print("DATA PREPARATION COMPLETE!")
     print("="*60)
     print(f"\nNext steps:")
-    print(f"1. Review the data in: {args.output_dir}")
-    print(f"2. Upload to HuggingFace:")
-    print(f"   - Upload train/, val/, test/ folders")
-    print(f"   - Upload train_labels.csv, val_labels.csv, test_images.csv")
-    print(f"   - Upload sample_submission.csv and README.md")
-    print(f"   - DO NOT upload test_labels_INTERNAL.csv")
-    print(f"\n3. Upload to Kaggle (competition backend):")
-    print(f"   - Upload solution.csv as the Solution File")
-    print(f"\n4. Share with students:")
-    print(f"   - HuggingFace dataset link")
-    print(f"   - Sample code to create submission")
+    print(f"Review the data in: {args.output_dir}")
+
 
 
 if __name__ == "__main__":
